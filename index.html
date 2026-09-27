@@ -8,28 +8,46 @@
 <link rel="preconnect" href="https://images.unsplash.com">
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f7f8;color:#171717}
-header{background:#fff;position:sticky;top:0;z-index:10;border-bottom:1px solid #eee}
-.nav{max-width:1150px;margin:auto;padding:15px 20px;display:flex;align-items:center;gap:22px}
+header{background:#fff;position:sticky;top:0;z-index:20;border-bottom:1px solid #eee}
+.nav{max-width:1150px;margin:auto;padding:15px 20px;display:flex;align-items:center;gap:18px}
 .logo{font-size:25px;font-weight:800;color:#d81b3d}.logo span{color:#222}
-.search{flex:1;max-width:520px;background:#f1f1f2;border:0;border-radius:24px;padding:13px 18px;font-size:15px;outline:none}
+.search-wrap{position:relative;flex:1;max-width:520px}
+.search{width:100%;background:#f1f1f2;border:0;border-radius:24px;padding:13px 42px 13px 18px;font-size:15px;outline:none}
+.search:focus{box-shadow:0 0 0 2px #ddd}
+.clear-search{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:transparent;cursor:pointer;font-size:20px;color:#777;display:none}
 nav a{color:#333;text-decoration:none;font-weight:600;font-size:14px}
 .hero{max-width:1150px;margin:25px auto;padding:48px 25px;border-radius:24px;background:linear-gradient(135deg,#fff,#f2eaff);text-align:center}
 .hero h1{font-size:42px;margin:0 0 12px}.hero p{color:#666;font-size:17px}
 .categories{max-width:1150px;margin:22px auto;display:flex;gap:10px;flex-wrap:wrap;padding:0 20px}
 .cat{border:0;background:#fff;border-radius:20px;padding:10px 17px;cursor:pointer;font-weight:600}
 .cat:hover,.cat.active{background:#171717;color:#fff}
+.results{max-width:1150px;margin:0 auto 12px;padding:0 20px;color:#666;font-size:14px}
 .grid{max-width:1150px;margin:20px auto;padding:0 20px;columns:4 220px;column-gap:16px}
-.card{background:#fff;border-radius:15px;overflow:hidden;margin:0 0 16px;break-inside:avoid;box-shadow:0 2px 12px #0000000b}
-.card img{width:100%;display:block;min-height:170px;object-fit:cover}.info{padding:12px}.info h3{font-size:15px;margin:0 0 7px}.tag{font-size:12px;color:#777}
+.card{background:#fff;border-radius:15px;overflow:visible;margin:0 0 16px;break-inside:avoid;box-shadow:0 2px 12px #0000000b}
+.card-media{position:relative;background:#eee;border-radius:15px 15px 0 0;overflow:hidden}
+.card img{width:100%;display:block;min-height:170px;object-fit:cover;cursor:pointer}
+.card-actions{display:flex;gap:7px;padding:10px;flex-wrap:wrap}
+.action{border:1px solid #e5e5e5;background:#fff;border-radius:9px;padding:7px 9px;cursor:pointer;font-size:12px;font-weight:600}
+.action:hover{background:#f2f2f2}
+.download-menu{position:relative}
+.download-options{display:none;position:absolute;right:0;bottom:42px;background:#fff;border:1px solid #ddd;border-radius:10px;padding:6px;box-shadow:0 8px 25px #0002;z-index:30;min-width:125px}
+.download-menu.open .download-options{display:block}
+.download-options button{display:block;width:100%;border:0;background:#fff;padding:8px;text-align:left;border-radius:7px;cursor:pointer;font-size:12px}
+.download-options button:hover{background:#f2f2f2}
+.info{padding:10px 12px 0}.info h3{font-size:15px;margin:0 0 6px}.tag{font-size:12px;color:#777}
+.empty{column-span:all;text-align:center;padding:50px 20px;color:#777}
+.toast{position:fixed;left:50%;bottom:25px;transform:translateX(-50%) translateY(15px);background:#171717;color:#fff;padding:11px 16px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:50}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 footer{margin-top:45px;background:#171717;color:#ddd;padding:35px 20px;text-align:center}
-@media(max-width:700px){.nav{flex-wrap:wrap}.search{order:3;flex-basis:100%;max-width:none}.hero h1{font-size:31px}}
+@media(max-width:700px){.nav{flex-wrap:wrap}.search-wrap{order:3;flex-basis:100%;max-width:none}.hero h1{font-size:31px}.grid{columns:2 150px}}
+@media(max-width:430px){.grid{columns:1}.nav{gap:12px}}
 </style>
 </head>
 <body>
 <header><div class="nav">
 <div class="logo">Tasveera</div>
 <nav><a href="#">Home</a></nav>
-<input id="search" class="search" placeholder="Search photos..." aria-label="Search photos">
+<div class="search-wrap"><input id="search" class="search" placeholder="Search photos..." aria-label="Search photos"><button id="clearSearch" class="clear-search" aria-label="Clear search">×</button></div>
 </div></header>
 
 <section class="hero">
@@ -47,8 +65,9 @@ footer{margin-top:45px;background:#171717;color:#ddd;padding:35px 20px;text-alig
 <button class="cat" data-cat="Wallpaper">📱 Wallpaper</button>
 </div>
 
-<main class="grid" id="gallery"></main>
+<div class="results" id="results"></div><main class="grid" id="gallery"></main>
 
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 <footer>
 <strong>Tasveera</strong><br><br>
 Beautiful images for inspiration and creativity.<br>
@@ -57,29 +76,98 @@ Beautiful images for inspiration and creativity.<br>
 
 <script>
 const photos=[
-["Nature","https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=900&q=85","Mountain Nature"],
-["Nature","https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=900&q=85","Forest"],
-["Home","https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=900&q=85","Modern Interior"],
-["Home","https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=900&q=85","Living Room"],
-["Fashion","https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=85","Fashion Style"],
-["Islamic","https://images.unsplash.com/photo-1542816417-098367d2a4c2?auto=format&fit=crop&w=900&q=85","Mosque Architecture"],
-["AI Art","https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?auto=format&fit=crop&w=900&q=85","Abstract Art"],
-["Wallpaper","https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=900&q=85","Phone Wallpaper"],
-["Nature","https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=900&q=85","Lake Landscape"],
-["Wallpaper","https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=900&q=85","Green Wallpaper"],
-["AI Art","https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=900&q=85","Creative Digital Art"],
-["Home","https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=85","Luxury Interior"]
+["Nature","https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=2400&q=90","Mountain Nature"],
+["Nature","https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2400&q=90","Forest"],
+["Home","https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=2400&q=90","Modern Interior"],
+["Home","https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=2400&q=90","Living Room"],
+["Fashion","https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=2400&q=90","Fashion Style"],
+["Islamic","https://images.unsplash.com/photo-1542816417-098367d2a4c2?auto=format&fit=crop&w=2400&q=90","Mosque Architecture"],
+["AI Art","https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?auto=format&fit=crop&w=2400&q=90","Abstract Art"],
+["Wallpaper","https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=2400&q=90","Phone Wallpaper"],
+["Nature","https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=2400&q=90","Lake Landscape"],
+["Wallpaper","https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=2400&q=90","Green Wallpaper"],
+["AI Art","https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=2400&q=90","Creative Digital Art"],
+["Home","https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=2400&q=90","Luxury Interior"]
 ];
 
-const gallery=document.getElementById("gallery"), search=document.getElementById("search");
+const gallery=document.getElementById("gallery"),search=document.getElementById("search");
+const results=document.getElementById("results"),clearSearch=document.getElementById("clearSearch");
+let toastTimer;
+
+function imageUrl(url,width){return url.replace(/w=\d+/,`w=${width}`)}
+function escapeHtml(v){return v.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+
 function render(){
- const q=search.value.toLowerCase();
+ const q=search.value.trim().toLowerCase();
  const active=document.querySelector(".cat.active").dataset.cat;
- gallery.innerHTML=photos.filter(p=>(active==="All"||p[0]===active)&&p[2].toLowerCase().includes(q))
- .map(p=>`<article class="card"><img loading="lazy" src="${p[1]}" alt="${p[2]}"><div class="info"><h3>${p[2]}</h3><div class="tag">${p[0]} • Share on Pinterest</div></div></article>`).join("");
+ const filtered=photos.filter(p=>(active==="All"||p[0]===active)&&(!q||p[2].toLowerCase().includes(q)||p[0].toLowerCase().includes(q)));
+ results.textContent=`${filtered.length} photo${filtered.length===1?"":"s"} found`;
+ clearSearch.style.display=search.value?"block":"none";
+ if(!filtered.length){gallery.innerHTML='<div class="empty">No photos found. Try another search or category.</div>';return}
+ gallery.innerHTML=filtered.map(p=>`
+ <article class="card">
+  <div class="card-media"><img loading="lazy" src="${imageUrl(p[1],1200)}" alt="${escapeHtml(p[2])}" data-index="${photos.indexOf(p)}"></div>
+  <div class="info"><h3>${escapeHtml(p[2])}</h3><div class="tag">${escapeHtml(p[0])}</div></div>
+  <div class="card-actions">
+   <div class="download-menu">
+    <button class="action download-btn" type="button">📥 Download</button>
+    <div class="download-options">
+     <button data-download="900">Standard</button><button data-download="1600">HD</button>
+     <button data-download="2048">2K</button><button data-download="3840">4K</button>
+    </div>
+   </div>
+   <button class="action share-btn" type="button">📤 Share</button>
+   <button class="action pinterest-btn" type="button">📌 Pinterest</button>
+   <button class="action copy-btn" type="button">🔗 Copy Link</button>
+  </div>
+ </article>`).join("");
+ bindCardActions();
+}
+
+function showToast(msg){
+ const toast=document.getElementById("toast");toast.textContent=msg;toast.classList.add("show");
+ clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove("show"),2200);
+}
+function getPhoto(btn){return photos[Number(btn.closest(".card").querySelector("img").dataset.index)]}
+
+async function copyText(value){
+ if(navigator.clipboard&&window.isSecureContext) await navigator.clipboard.writeText(value);
+ else{const a=document.createElement("textarea");a.value=value;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();document.execCommand("copy");a.remove()}
+}
+async function downloadImage(url,title,width){
+ try{
+  const r=await fetch(imageUrl(url,width),{mode:"cors"});if(!r.ok)throw Error();
+  const blob=await r.blob(),objectUrl=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=objectUrl;a.download=`${title.replace(/[^a-z0-9]+/gi,"-").toLowerCase()}-${width}px.jpg`;
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(objectUrl);
+  showToast(`${width>=3840?"4K":width>=2048?"2K":width>=1600?"HD":"Standard"} download started`);
+ }catch(e){window.open(imageUrl(url,width),"_blank","noopener");showToast("Image opened — save it from the browser")}
+}
+async function sharePhoto(url,title){
+ if(navigator.share){try{await navigator.share({title:"Tasveera — "+title,url});return}catch(e){}}
+ try{await copyText(url);showToast("Link copied — ready to share")}catch(e){showToast("Could not share")}
+}
+function pinterestSave(url,title){
+ const pin="https://www.pinterest.com/pin/create/button/?url="+encodeURIComponent(location.href)+"&media="+encodeURIComponent(url)+"&description="+encodeURIComponent(title);
+ window.open(pin,"_blank","noopener");
+}
+function bindCardActions(){
+ document.querySelectorAll(".download-btn").forEach(btn=>btn.onclick=()=>{
+  const menu=btn.closest(".download-menu");
+  document.querySelectorAll(".download-menu.open").forEach(x=>{if(x!==menu)x.classList.remove("open")});
+  menu.classList.toggle("open");
+ });
+ document.querySelectorAll("[data-download]").forEach(btn=>btn.onclick=()=>{const p=getPhoto(btn);btn.closest(".download-menu").classList.remove("open");downloadImage(p[1],p[2],Number(btn.dataset.download))});
+ document.querySelectorAll(".share-btn").forEach(btn=>btn.onclick=()=>{const p=getPhoto(btn);sharePhoto(p[1],p[2])});
+ document.querySelectorAll(".pinterest-btn").forEach(btn=>btn.onclick=()=>{const p=getPhoto(btn);pinterestSave(p[1],p[2])});
+ document.querySelectorAll(".copy-btn").forEach(btn=>btn.onclick=async()=>{try{await copyText(getPhoto(btn)[1]);showToast("Image link copied")}catch(e){showToast("Could not copy link")}});
+ document.querySelectorAll(".card img").forEach(img=>img.onclick=()=>window.open(img.src,"_blank","noopener"));
 }
 document.querySelectorAll(".cat").forEach(b=>b.onclick=()=>{document.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));b.classList.add("active");render()});
-search.oninput=render; render();
+search.oninput=render;
+clearSearch.onclick=()=>{search.value="";search.focus();render()};
+document.addEventListener("click",e=>{if(!e.target.closest(".download-menu"))document.querySelectorAll(".download-menu.open").forEach(x=>x.classList.remove("open"))});
+render();
 </script>
 </body>
 </html>
