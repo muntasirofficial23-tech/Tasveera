@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Tasveera - beautiful wallpapers, nature, home design, fashion, Islamic designs and AI art.">
+<title>Tasveera — Discover Beautiful Images</title>
+<link rel="preconnect" href="https://images.unsplash.com">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f7f8;color:#171717}
+header{background:#fff;position:sticky;top:0;z-index:10;border-bottom:1px solid #eee}
+.nav{max-width:1150px;margin:auto;padding:15px 20px;display:flex;align-items:center;gap:22px}
+.logo{font-size:25px;font-weight:800;color:#d81b3d}.logo span{color:#222}
+.search{flex:1;max-width:520px;background:#f1f1f2;border:0;border-radius:24px;padding:13px 18px;font-size:15px;outline:none}
+nav a{color:#333;text-decoration:none;font-weight:600;font-size:14px}
+.hero{max-width:1150px;margin:25px auto;padding:48px 25px;border-radius:24px;background:linear-gradient(135deg,#fff,#f2eaff);text-align:center}
+.hero h1{font-size:42px;margin:0 0 12px}.hero p{color:#666;font-size:17px}
+.categories{max-width:1150px;margin:22px auto;display:flex;gap:10px;flex-wrap:wrap;padding:0 20px}
+.cat{border:0;background:#fff;border-radius:20px;padding:10px 17px;cursor:pointer;font-weight:600}
+.cat:hover,.cat.active{background:#171717;color:#fff}
+.grid{max-width:1150px;margin:20px auto;padding:0 20px;columns:4 220px;column-gap:16px}
+.card{background:#fff;border-radius:15px;overflow:hidden;margin:0 0 16px;break-inside:avoid;box-shadow:0 2px 12px #0000000b}
+.card img{width:100%;display:block;min-height:170px;object-fit:cover}.info{padding:12px}.info h3{font-size:15px;margin:0 0 7px}.tag{font-size:12px;color:#777}
+footer{margin-top:45px;background:#171717;color:#ddd;padding:35px 20px;text-align:center}
+@media(max-width:700px){.nav{flex-wrap:wrap}.search{order:3;flex-basis:100%;max-width:none}.hero h1{font-size:31px}}
+</style>
+</head>
+<body>
+<header><div class="nav">
+<div class="logo">Mix<span>Photo</span></div>
+<nav><a href="#">Home</a></nav>
+<input id="search" class="search" placeholder="Search photos..." aria-label="Search photos">
+</div></header>
+
+<section class="hero">
+<h1>Discover Beautiful Images</h1>
+<p>Wallpapers, nature, home design, fashion, Islamic designs and AI art — all in one place.</p>
+</section>
+
+<div class="categories" id="categories">
+<button class="cat active" data-cat="All">All</button>
+<button class="cat" data-cat="Nature">🌿 Nature</button>
+<button class="cat" data-cat="Home">🏠 Home Design</button>
+<button class="cat" data-cat="Fashion">👗 Fashion</button>
+<button class="cat" data-cat="Islamic">🕌 Islamic</button>
+<button class="cat" data-cat="AI Art">🎨 AI Art</button>
+<button class="cat" data-cat="Wallpaper">📱 Wallpaper</button>
+</div>
+
+<main class="grid" id="gallery"></main>
+
+<footer>
+<strong>Tasveera</strong><br><br>
+Beautiful images for inspiration and creativity.<br>
+© 2026 Tasveera
+</footer>
+
+<script>
+const photos=[
+["Nature","https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=900&q=85","Mountain Nature"],
+["Nature","https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=900&q=85","Forest"],
+["Home","https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=900&q=85","Modern Interior"],
+["Home","https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=900&q=85","Living Room"],
+["Fashion","https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=85","Fashion Style"],
+["Islamic","https://images.unsplash.com/photo-1542816417-098367d2a4c2?auto=format&fit=crop&w=900&q=85","Mosque Architecture"],
+["AI Art","https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?auto=format&fit=crop&w=900&q=85","Abstract Art"],
+["Wallpaper","https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=900&q=85","Phone Wallpaper"],
+["Nature","https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=900&q=85","Lake Landscape"],
+["Wallpaper","https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=900&q=85","Green Wallpaper"],
+["AI Art","https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=900&q=85","Creative Digital Art"],
+["Home","https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=85","Luxury Interior"]
+];
+
+const gallery=document.getElementById("gallery"), search=document.getElementById("search");
+function render(){
+ const q=search.value.toLowerCase();
+ const active=document.querySelector(".cat.active").dataset.cat;
+ gallery.innerHTML=photos.filter(p=>(active==="All"||p[0]===active)&&p[2].toLowerCase().includes(q))
+ .map(p=>`<article class="card"><img loading="lazy" src="${p[1]}" alt="${p[2]}"><div class="info"><h3>${p[2]}</h3><div class="tag">${p[0]} • Share on Pinterest</div></div></article>`).join("");
+}
+document.querySelectorAll(".cat").forEach(b=>b.onclick=()=>{document.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));b.classList.add("active");render()});
+search.oninput=render; render();
+</script>
+</body>
+</html>
